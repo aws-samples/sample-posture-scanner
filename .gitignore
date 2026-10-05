@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Scan output — contains customer findings, red-team evidence, and SBOMs
+results/
+posture-report/
+*.ocsf.json
+
+# promptfoo local state
+.promptfoo/
+promptfooconfig.yaml
+redteam.yaml
+
+# Distribution bundles and delivery notes (may contain presigned URLs)
+customer-handoff/
+*-bundle.zip
+DELIVERY-NOTE*.txt
+
+# Secrets and local configuration
+.env
+.env.*
+*.pem
+*.key
+.aws/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

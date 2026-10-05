@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Dedicated read-only IAM role for Prowler AWS posture scans. The role trusts
+  one exact IAM principal and grants SecurityAudit, ViewOnlyAccess, and the
+  additional read actions required by current Prowler checks.
+
+Parameters:
+  RoleName:
+    Type: String
+    Default: PostureScannerRole
+    AllowedPattern: '[\w+=,.@-]{1,64}'
+    Description: Name of the scanner role.
+
+  TrustedPrincipalArn:
+    Type: String
+    AllowedPattern: 'arn:[^:]+:iam::[0-9]{12}:(root|user/.+|role/.+)'
+    Description: Exact IAM user, role, or account-root ARN allowed to assume this role.
+
+  ExternalId:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Optional ExternalId; required by aws-posture for cross-account trust.
+
+  MaxSessionDurationSeconds:
+    Type: Number
+    Default: 3600
+    MinValue: 3600
+    MaxValue: 43200
+
+Conditions:
+  HasExternalId: !Not [!Equals [!Ref ExternalId, '']]
+
+Resources:
+  PostureScannerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      MaxSessionDuration: !Ref MaxSessionDurationSeconds
+      Description: Read-only role managed by aws-posture for Prowler assessments.
+      Tags:
+        - Key: ManagedBy
+          Value: aws-posture
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TrustExactScannerPrincipal
+            Effect: Allow
+            Principal:
+              AWS: !Ref TrustedPrincipalArn
+            Action: sts:AssumeRole
+            Condition: !If
+              - HasExternalId
+              - StringEquals:
+                  sts:ExternalId: !Ref ExternalId
+              - !Ref AWS::NoValue
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/SecurityAudit
+        - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+
+  ProwlerReadAdditionsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: prowler-read-additions
+      Roles:
+        - !Ref PostureScannerRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowMoreReadOnly
+            Effect: Allow
+            Resource: '*'
+            Action:
+              - account:Get*
+              - amplify:ListApps
+              - amplify:ListBranches
+              - appstream:Describe*
+              - appstream:List*
+              - backup:Get*
+              - backup:List*
+              - bedrock:Get*
+              - bedrock:List*
+              - cloudtrail:GetInsightSelectors
+              - codeartifact:List*
+              - codebuild:BatchGet*
+              - codebuild:ListReportGroups
+              - cognito-idp:GetUserPoolMfaConfig
+              - datapipeline:DescribePipelines
+              - datapipeline:GetPipelineDefinition
+              - datapipeline:ListPipelines
+              - dlm:Get*
+              - drs:Describe*
+              - ds:Describe*
+              - ds:Get*
+              - ds:List*
+              - dynamodb:GetResourcePolicy
+              - ec2:GetEbsEncryptionByDefault
+              - ec2:GetInstanceMetadataDefaults
+              - ec2:GetSnapshotBlockPublicAccessState
+              - ecr:Describe*
+              - ecr:GetRegistryScanningConfiguration
+              - elasticfilesystem:DescribeBackupPolicy
+              - glue:GetConnections
+              - glue:GetMLTransforms
+              - glue:GetSecurityConfiguration*
+              - glue:SearchTables
+              - lambda:GetFunction*
+              - lightsail:GetRelationalDatabases
+              - logs:FilterLogEvents
+              - macie2:GetAutomatedDiscoveryConfiguration
+              - macie2:GetMacieSession
+              - rolesanywhere:ListTagsForResource
+              - rolesanywhere:ListTrustAnchors
+              - s3:GetAccountPublicAccessBlock
+              - s3:GetObjectAcl
+              - s3:ListBucket
+              - securityhub:GetFindings
+              - servicecatalog:Describe*
+              - servicecatalog:List*
+              - shield:DescribeProtection
+              - shield:GetSubscriptionState
+              - ssm:GetDocument
+              - ssm-incidents:List*
+              - states:ListTagsForResource
+              - support:Describe*
+              - tag:GetTagKeys
+              - wellarchitected:List*
+          - Sid: AllowAPIGatewayReadOnly
+            Effect: Allow
+            Action: apigateway:GET
+            Resource:
+              - arn:*:apigateway:*::/restapis/*
+              - arn:*:apigateway:*::/apis/*
+              - arn:*:apigateway:*::/domainnames
+              - arn:*:apigateway:*::/domainnames/*
+
+Outputs:
+  RoleArn:
+    Description: Scanner role ARN.
+    Value: !GetAtt PostureScannerRole.Arn
+  ExampleCommand:
+    Description: Example Prowler command without an ExternalId.
+    Value: !Sub 'prowler aws --role ${PostureScannerRole.Arn} --output-formats json-ocsf csv html'

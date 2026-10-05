@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Dedicated IAM role for aws-posture GenAI red teaming with promptfoo. It can
+  read Bedrock agent, knowledge-base, and managed-prompt definitions and invoke
+  models, agents, and knowledge bases. It cannot change any Bedrock resource.
+  Deploy it separately from the read-only posture scanner role and use it only
+  against non-production agents, aliases, and knowledge bases.
+
+Parameters:
+  RoleName:
+    Type: String
+    Default: GenAIRedTeamRole
+    AllowedPattern: '[\w+=,.@-]{1,64}'
+  TrustedPrincipalArn:
+    Type: String
+    AllowedPattern: 'arn:[^:]+:iam::[0-9]{12}:(root|user/.+|role/.+)'
+    Description: Exact IAM user, role, or account-root ARN allowed to assume this role.
+  ExternalId:
+    Type: String
+    Default: ''
+    NoEcho: true
+  MaxSessionDurationSeconds:
+    Type: Number
+    Default: 3600
+    MinValue: 3600
+    MaxValue: 43200
+
+Conditions:
+  HasExternalId: !Not [!Equals [!Ref ExternalId, '']]
+
+Resources:
+  GenAIRedTeamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      MaxSessionDuration: !Ref MaxSessionDurationSeconds
+      Description: Invoke-only role managed by aws-posture for promptfoo red teaming.
+      Tags:
+        - Key: ManagedBy
+          Value: aws-posture
+        - Key: Purpose
+          Value: genai-redteam
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: TrustExactRedTeamPrincipal
+            Effect: Allow
+            Principal:
+              AWS: !Ref TrustedPrincipalArn
+            Action: sts:AssumeRole
+            Condition: !If
+              - HasExternalId
+              - StringEquals:
+                  sts:ExternalId: !Ref ExternalId
+              - !Ref AWS::NoValue
+
+  GenAIRedTeamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: genai-redteam-invoke
+      Roles:
+        - !Ref GenAIRedTeamRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ReadTargetDefinitions
+            Effect: Allow
+            Resource: '*'
+            Action:
+              - bedrock:GetAgent
+              - bedrock:GetAgentAlias
+              - bedrock:GetKnowledgeBase
+              - bedrock:GetPrompt
+              - bedrock:ListPrompts
+          - Sid: InvokeTargetsAndGrader
+            Effect: Allow
+            Resource: '*'
+            Action:
+              - bedrock:InvokeModel
+              - bedrock:InvokeModelWithResponseStream
+              - bedrock:InvokeAgent
+              - bedrock:Retrieve
+              - bedrock:RetrieveAndGenerate
+              - bedrock:GetInferenceProfile
+          - Sid: DecryptCustomerManagedPromptsViaBedrock
+            Effect: Allow
+            Resource: '*'
+            Action: kms:Decrypt
+            Condition:
+              StringLike:
+                kms:ViaService: bedrock.*.amazonaws.com
+
+Outputs:
+  RoleArn:
+    Description: Red-team role ARN.
+    Value: !GetAtt GenAIRedTeamRole.Arn

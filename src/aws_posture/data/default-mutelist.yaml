@@ -1,0 +1,55 @@
+# Default aws-posture mutelist for Prowler.
+#
+# Mutes checks that are commonly noisy or represent accepted risk rather than
+# real exposure. Findings for these checks are still collected by Prowler but
+# marked MUTED, so they no longer drag down the posture score.
+#
+# Review this list with the account owner before using it in a customer
+# engagement; muting is a policy decision, not a technical one.
+Mutelist:
+  Accounts:
+    "*":
+      Checks:
+        # Fires for every service role missing aws:SourceArn/aws:SourceAccount
+        # conditions, including CDK/CloudFormation-created roles where the
+        # cross-account confused-deputy risk is largely theoretical.
+        "iam_role_cross_service_confused_deputy_prevention":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Noisy heuristic; remediate selectively for S3/SNS/CloudTrail-style trust policies."
+        # Naming heuristic on EC2 launch-wizard security groups; the finding
+        # itself is not a vulnerability. Real fix is deleting unused groups.
+        "ec2_securitygroup_from_launch_wizard":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Naming heuristic, not a vulnerability; clean up unused groups instead."
+        # MFA-delete is impractical for most automated workflows and cannot be
+        # enabled via IaC/console for most configurations.
+        "s3_bucket_no_mfa_delete":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Accepted risk; MFA-delete is impractical for automated pipelines."
+        # Buckets are encrypted with SSE-S3 by default since 2023; this check
+        # demands SSE-KMS specifically, which is a data-classification decision.
+        "s3_bucket_kms_encryption":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "SSE-S3 default encryption already applies; KMS is a per-classification choice."
+        # Fails users who already have virtual MFA because the check requires
+        # hardware tokens.
+        "iam_user_hardware_mfa_enabled":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Virtual MFA is the accepted organizational standard."
+        # Backup hygiene, not a security exposure; tracked through the backup
+        # program rather than the security posture score.
+        "ec2_ebs_volume_snapshots_exists":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Backup hygiene item; handled by the backup program."
+        # Fires whenever any delegated administrator exists; the delegated
+        # security/audit account is intentional.
+        "organizations_delegated_administrators":
+          Regions: ["*"]
+          Resources: ["*"]
+          Description: "Delegated administrator account is approved; review the allowlist periodically."
