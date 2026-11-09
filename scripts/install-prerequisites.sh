@@ -62,11 +62,19 @@ else
 fi
 
 # 4. Install Gitleaks + Trivy.
+# Preferred: download the exact pinned release binaries, verify the published
+# SHA-256 checksum or GPG signature, and place them on PATH:
+#   Gitleaks 8.30.1: https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1
+#   Trivy   0.72.0 : https://github.com/aquasecurity/trivy/releases/tag/v0.72.0
+#
+# Homebrew is a convenient fallback on macOS, but formula versions can drift
+# ahead of the pinned releases. After installing via brew, run
+# "aws-posture check --code" to verify the detected versions match exactly.
 if command -v brew >/dev/null 2>&1; then
-  echo "==> Installing Gitleaks and Trivy via Homebrew"
+  echo "==> Installing Gitleaks and Trivy via Homebrew (verify version match with aws-posture check --code)"
   brew install gitleaks trivy
 else
-  echo "!! Homebrew not found. Install the pinned binaries manually:"
+  echo "!! Homebrew not found. Download the exact pinned release binaries manually:"
   echo "   - Gitleaks 8.30.1: https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1"
   echo "   - Trivy   0.72.0 : https://github.com/aquasecurity/trivy/releases/tag/v0.72.0"
   echo "   Verify the published SHA-256/signature and place each binary on PATH."

@@ -448,7 +448,7 @@ def test_setup_genai_iam_uses_separate_template_and_names(monkeypatch):
 
 
 def test_genai_role_template_is_invoke_only():
-    from importlib.resources import files
+    from importlib.resources import files  # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2 -- pyproject.toml requires Python >=3.10; importlib.resources is available since Python 3.7
 
     text = files("aws_posture").joinpath("data", "genai-redteam-role.yaml").read_text()
     assert "bedrock:InvokeAgent" in text and "bedrock:GetPrompt" in text

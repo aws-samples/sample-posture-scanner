@@ -42,7 +42,7 @@ class Checkout:
 
 
 def _run(command: Sequence[str], **kwargs) -> subprocess.CompletedProcess:
-    return subprocess.run(list(command), check=False, text=True, **kwargs)
+    return subprocess.run(list(command), check=False, text=True, **kwargs)  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- security tool by design; command is a pre-built structured list (no shell=True), composed from validated PATH-resolved executables and static string args; no user-controlled string interpolation
 
 
 def _git(args: Sequence[str], cwd: Path, required: bool = True) -> str:
@@ -82,8 +82,13 @@ def _safe_remote_label(source: str) -> str:
 
 def _validate_remote_source(source: str) -> None:
     parsed = urlsplit(source)
+    if parsed.scheme.lower() in {"http", "git"}:
+        raise ValueError(
+            f"Unencrypted URL scheme '{parsed.scheme}://' is not accepted. "
+            "Use https://, ssh://, or a git@host:path SSH shorthand instead."
+        )
     if parsed.password is not None or (
-        parsed.scheme.lower() in {"http", "https", "git"}
+        parsed.scheme.lower() in {"https"}
         and parsed.username is not None
     ):
         raise ValueError(

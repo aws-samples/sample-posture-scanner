@@ -2,9 +2,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Dedicated IAM role for aws-posture GenAI red teaming with promptfoo. It can
   read Bedrock agent, knowledge-base, and managed-prompt definitions and invoke
-  models, agents, and knowledge bases. It cannot change any Bedrock resource.
-  Deploy it separately from the read-only posture scanner role and use it only
-  against non-production agents, aliases, and knowledge bases.
+  models, agents, and knowledge bases. It is designed to not change any Bedrock
+  resource. Deploy it only against non-production agents, aliases, and knowledge
+  bases. Scope AllowedAgentAliasArns, AllowedKnowledgeBaseArns, and
+  AllowedModelArns to specific target ARNs before production use, then delete
+  the stack when red teaming ends.
 
 Parameters:
   RoleName:
@@ -19,11 +21,36 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
+    Description: >
+      External ID for confused-deputy protection. Required when TrustedPrincipalArn
+      belongs to a different account; strongly recommended for all deployments.
   MaxSessionDurationSeconds:
     Type: Number
     Default: 3600
     MinValue: 3600
     MaxValue: 43200
+  AllowedAgentAliasArns:
+    Type: CommaDelimitedList
+    Default: '*'
+    Description: >
+      Agent alias ARNs that bedrock:InvokeAgent is permitted on
+      (e.g. arn:aws:bedrock:us-east-1:123456789012:agent-alias/ABCDEFGHIJ/TSTALIAS).
+      Defaults to all (*). Strongly recommended to scope to specific aliases
+      before production use to prevent invoking production agents.
+  AllowedKnowledgeBaseArns:
+    Type: CommaDelimitedList
+    Default: '*'
+    Description: >
+      Knowledge-base ARNs that bedrock:Retrieve and bedrock:RetrieveAndGenerate
+      are permitted on. Defaults to all (*). Scope to specific knowledge bases
+      before production use.
+  AllowedModelArns:
+    Type: CommaDelimitedList
+    Default: '*'
+    Description: >
+      Bedrock model ARNs (or model IDs) that bedrock:InvokeModel* is permitted on.
+      Defaults to all (*). Scope to the attacker/grader model and target models
+      before production use.
 
 Conditions:
   HasExternalId: !Not [!Equals [!Ref ExternalId, '']]
@@ -72,16 +99,24 @@ Resources:
               - bedrock:GetKnowledgeBase
               - bedrock:GetPrompt
               - bedrock:ListPrompts
-          - Sid: InvokeTargetsAndGrader
+              - bedrock:GetInferenceProfile
+          - Sid: InvokeAgents
             Effect: Allow
-            Resource: '*'
+            Resource: !Ref AllowedAgentAliasArns
+            Action:
+              - bedrock:InvokeAgent
+          - Sid: InvokeModels
+            Effect: Allow
+            Resource: !Ref AllowedModelArns
             Action:
               - bedrock:InvokeModel
               - bedrock:InvokeModelWithResponseStream
-              - bedrock:InvokeAgent
+          - Sid: RetrieveKnowledgeBases
+            Effect: Allow
+            Resource: !Ref AllowedKnowledgeBaseArns
+            Action:
               - bedrock:Retrieve
               - bedrock:RetrieveAndGenerate
-              - bedrock:GetInferenceProfile
           - Sid: DecryptCustomerManagedPromptsViaBedrock
             Effect: Allow
             Resource: '*'

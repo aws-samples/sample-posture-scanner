@@ -28,7 +28,7 @@ def gitleaks_version() -> Optional[str]:
     executable = gitleaks_path()
     if not executable:
         return None
-    completed = subprocess.run(
+    completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned Gitleaks binary with static [executable, "version"] list; shell=False by default, no user-controlled string interpolation
         [executable, "version"],
         check=False,
         capture_output=True,
@@ -135,7 +135,7 @@ def run_gitleaks(
             command += ["--timeout", str(timeout)]
         command.append(str(checkout.path))
 
-        completed = subprocess.run(
+        completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned Gitleaks binary with a structured list built from validated flags and a caller-controlled checkout path; shell=False by default
             command,
             check=False,
             stdout=subprocess.DEVNULL,

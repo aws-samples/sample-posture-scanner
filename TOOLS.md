@@ -32,7 +32,7 @@ distorting the posture score.
   by default
 - Plugins that need hosted generation are skipped and reported unless
   `--allow-remote-generation` is approved
-- Runs with a separate invoke-only IAM role (`setup-genai-iam`), never the
+- Runs with a separate invoke-only IAM role (`setup-genai-iam`), not the
   read-only posture role
 - Requires explicit `--i-understand-active-testing`; `--plan` sends nothing
 
@@ -70,8 +70,8 @@ reports.
 - `--redact=100` is mandatory
 - Reports are created in temporary storage, then defensively sanitized before
   persistence
-- Secret, match, source line, author, email, and commit-message fields are never
-  stored by `aws-posture`
+- Secret, match, source line, author, email, and commit-message fields are not
+  stored by `aws-posture` in its current implementation
 - Full history requires explicit `--history` and a complete remote clone
 
 ### Trivy 0.72.0
@@ -85,8 +85,8 @@ reports.
 - Vulnerability database updates remain enabled by default for fresh results;
   `--trivy-skip-db-update` requires a usable local cache
 
-Trivy's release ecosystem experienced a documented supply-chain compromise in
-2026 affecting older artifacts/tags. The integration requires exactly 0.72.0.
+Trivy has experienced supply-chain incidents affecting release artifacts and
+tags. The integration requires exactly 0.72.0.
 Installation guidance requires official release checksum/signature verification
 and rejects floating `latest` containers/actions.
 

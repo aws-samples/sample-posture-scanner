@@ -20,7 +20,11 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
-    Description: Optional ExternalId; required by aws-posture for cross-account trust.
+    Description: >
+      External ID for confused-deputy protection. Required by aws-posture for
+      cross-account trust; strongly recommended for all deployments. Manual
+      CloudFormation deployments that omit this parameter weaken the trust policy
+      — always provide a randomly generated value.
 
   MaxSessionDurationSeconds:
     Type: Number

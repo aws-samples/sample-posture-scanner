@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from importlib.resources import files
+from importlib.resources import files  # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2 -- pyproject.toml requires Python >=3.10; importlib.resources is available since Python 3.7
 from typing import Optional
 
 import boto3
@@ -196,12 +196,19 @@ def setup_role(
     return plan
 
 
+MAX_STACKSET_WAIT_SECONDS = 1800  # 30 minutes; prevents unbounded polling
+
+
 def _wait_for_stack_set_operation(
     cloudformation, stack_set_name: str, operation_id: str, call_as: str
 ) -> None:
-    """Wait for a StackSet operation and raise with its final status reason."""
+    """Wait for a StackSet operation and raise with its final status reason.
+
+    Polls every 5 seconds up to MAX_STACKSET_WAIT_SECONDS (30 minutes).
+    """
     import time
 
+    waited = 0
     while True:
         response = cloudformation.describe_stack_set_operation(
             StackSetName=stack_set_name,
@@ -211,7 +218,14 @@ def _wait_for_stack_set_operation(
         operation = response["StackSetOperation"]
         status = operation["Status"]
         if status in {"RUNNING", "QUEUED", "STOPPING"}:
-            time.sleep(5)
+            if waited >= MAX_STACKSET_WAIT_SECONDS:
+                raise RuntimeError(
+                    f"StackSet operation {operation_id} did not complete within "
+                    f"{MAX_STACKSET_WAIT_SECONDS} seconds (last status: {status}). "
+                    "Check the StackSet in the AWS Console for details."
+                )
+            time.sleep(5)  # nosemgrep: python.lang.security.audit.arbitrary-sleep -- intentional 5-second StackSet status poll; bounded above by MAX_STACKSET_WAIT_SECONDS
+            waited += 5
             continue
         if status != "SUCCEEDED":
             raise RuntimeError(

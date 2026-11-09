@@ -32,7 +32,20 @@ This will show what's working and what needs configuration.
 
 You need AWS credentials before you can scan. Choose one option:
 
-### Option A: AWS CLI Profile (Recommended)
+### Option A: AWS IAM Identity Center / SSO (Recommended)
+
+```bash
+aws configure sso
+```
+
+Follow the browser prompts to authenticate. This avoids long-lived static keys.
+After setup, authenticate your session before scanning:
+
+```bash
+aws sso login --profile myprofile
+```
+
+### Option B: AWS CLI Profile (static access keys — not recommended for production)
 
 ```bash
 aws configure --profile myprofile
@@ -44,21 +57,16 @@ You'll be prompted for:
 - **Default region:** `us-east-1` (or your preferred region)
 - **Default output format:** `json`
 
-### Option B: Environment Variables
+> **Note:** Long-lived IAM user access keys are a higher-risk credential type.
+> Prefer IAM Identity Center (Option A) where possible.
+
+### Option C: Environment Variables
 
 ```bash
 export AWS_ACCESS_KEY_ID="AKIA..."
 export AWS_SECRET_ACCESS_KEY="..."
 export AWS_DEFAULT_REGION="us-east-1"
 ```
-
-### Option C: AWS SSO
-
-```bash
-aws configure sso
-```
-
-Follow the browser prompts to authenticate.
 
 ---
 
@@ -140,7 +148,7 @@ results/scan-<timestamp>/
 │   ├── posture-*.ocsf.json         # Detailed findings
 │   ├── posture-*.csv               # CSV format
 │   ├── posture-*.html              # HTML report
-│   └── compliance/*.csv            # Compliance reports (CIS, PCI-DSS, etc.)
+│   └── compliance/*.csv            # Compliance framework mappings (CIS, PCI-DSS, etc.) — not attestations
 ├── access-analyzer/                 # IAM Access Analyzer findings
 │   └── access-analyzer-findings.json
 └── report/                          # Consolidated reports

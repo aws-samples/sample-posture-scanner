@@ -73,7 +73,7 @@ Trivy but not Prowler or AWS credentials.
 - Trivy downloads its vulnerability database by default (disable with
   `--trivy-skip-db-update` once a local cache exists). Telemetry and version
   checks are always disabled by aws-posture.
-- Gitleaks always runs with 100% secret redaction.
+- Gitleaks is configured to run with 100% secret redaction.
 
 ---
 
@@ -155,7 +155,7 @@ official download link so you can install and checksum-verify it manually.
 
 ### 2.4 Supply-chain caution (Trivy)
 
-Trivy's release ecosystem had a documented compromise in 2026 affecting older
+Trivy's release ecosystem had supply-chain incidents affecting older
 artifacts and tags. Always pin **0.72.0**, verify official checksums or
 signatures, and never use floating `latest` containers or CI actions.
 
@@ -681,12 +681,12 @@ Get detailed diagnostics by running the underlying engine directly (for example
 
 ## 10. Safety summary
 
-- IAM changes happen only with `--apply`; everything else is plan/read-only.
-- The scanner role is read-only (`SecurityAudit`, `ViewOnlyAccess`, plus Prowler
+- IAM changes are made only with `--apply`; everything else is plan/read-only.
+- The scanner role is designed to be read-only (`SecurityAudit`, `ViewOnlyAccess`, plus Prowler
   read additions; no `securityhub:BatchImportFindings`).
-- Repository scans never modify the source; remote clones are temporary and
+- Repository scans are designed not to modify the source; remote clones are temporary and
   deleted after reporting.
-- Secrets are fully redacted; credentials are never accepted in URLs or stored in
+- Secrets are fully redacted by design; credentials are not accepted in URLs or stored in
   manifests, and External IDs are redacted from logs and marked `NoEcho` in
   CloudFormation.
 - Known limitation: Prowler accepts the External ID only as a command-line

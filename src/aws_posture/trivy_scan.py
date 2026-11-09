@@ -29,7 +29,7 @@ def trivy_version() -> Optional[str]:
     executable = trivy_path()
     if not executable:
         return None
-    completed = subprocess.run(
+    completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned Trivy binary with static ["--version"] arg; shell=False by default, no user-controlled string interpolation
         [executable, "--version"],
         check=False,
         capture_output=True,
@@ -125,7 +125,7 @@ def run_trivy(
         (security_command, raw_output),
         (sbom_command, sbom_output),
     ):
-        completed = subprocess.run(
+        completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned Trivy binary with a structured list built from validated flags; shell=False by default, no user-controlled string interpolation
             command,
             check=False,
             stdout=subprocess.DEVNULL,

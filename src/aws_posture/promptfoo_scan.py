@@ -148,7 +148,7 @@ def promptfoo_path() -> Optional[str]:
 
 
 def _last_line(command: list[str]) -> Optional[str]:
-    completed = subprocess.run(
+    completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned promptfoo/node binary for version query; command is a static list; shell=False by default, no user-controlled string interpolation
         command, check=False, capture_output=True, text=True, env=base_environment()
     )
     output = (completed.stdout or completed.stderr).strip()
@@ -393,7 +393,7 @@ def _run(command: list[str], environment: dict[str, str], log_path: Path, timeou
         log.write("$ " + " ".join(command) + "\n")
         log.flush()
         try:
-            completed = subprocess.run(
+            completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned promptfoo binary with a structured list; shell=False by default, credentials passed via environment never argv
                 command,
                 check=False,
                 stdout=log,

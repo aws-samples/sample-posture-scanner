@@ -25,7 +25,7 @@ def tool_version(name: str) -> Optional[str]:
     executable = tool_path(name)
     if not executable:
         return None
-    completed = subprocess.run(
+    completed = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes a PATH-resolved tool binary with static ["--version"] arg; shell=False by default, no user-controlled string interpolation
         [executable, "--version"], capture_output=True, text=True, check=False
     )
     output = (completed.stdout or completed.stderr).strip()
@@ -81,7 +81,7 @@ def resolve_mutelist(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
     if value.lower() == "default":
-        from importlib.resources import as_file, files
+        from importlib.resources import as_file, files  # nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2 -- pyproject.toml requires Python >=3.10; importlib.resources is available since Python 3.7
 
         resource = files("aws_posture").joinpath("data", "default-mutelist.yaml")
         with as_file(resource) as path:
@@ -154,7 +154,7 @@ def run_prowler(
 
     print(f"==> Running Prowler{f' against {role}' if role else ''}...")
     print("    $ " + _display_command(command))
-    completed = subprocess.run(command, check=False)
+    completed = subprocess.run(command, check=False)  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit -- executes pinned Prowler with a structured list assembled from validated flags; shell=False by default, external-id is always redacted from logs
     if completed.returncode != 0:
         raise ScannerError(
             f"Prowler exited with code {completed.returncode}; inspect its console output."
