@@ -9,7 +9,7 @@ description = "Cross-platform Prowler AWS posture, Semgrep/Gitleaks/Trivy reposi
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT-0"
-authors = [{ name = "AWS Posture Scanner" }]
+authors = [{ name = "Amazon Web Services" }]
 keywords = ["aws", "security", "posture", "prowler", "semgrep", "gitleaks", "trivy", "sast", "sca", "secrets", "sbom", "iac", "git", "cspm", "organizations", "bedrock", "genai", "llm", "red-team", "promptfoo", "agentic"]
 dependencies = [
     "boto3==1.43.56",
@@ -26,6 +26,11 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Security",
 ]
+
+[project.urls]
+Homepage = "https://github.com/aws-samples/sample-posture-scanner"
+Repository = "https://github.com/aws-samples/sample-posture-scanner"
+"Bug Tracker" = "https://github.com/aws-samples/sample-posture-scanner/issues"
 
 [project.scripts]
 aws-posture = "aws_posture.cli:main"

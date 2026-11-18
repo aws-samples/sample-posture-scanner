@@ -5,15 +5,17 @@
 Open a terminal and run:
 
 ```bash
-source ~/.zshrc
 aws-posture --version
 prowler --version
 ```
 
-Expected output:
+If the commands are not found, restart your shell or run
+`source ~/.zshrc` (macOS) / `source ~/.bashrc` (Linux).
+
+Expected output (versions may differ):
 ```
-aws-posture 0.6.0
-Prowler 5.36.0 (You are running the latest version, yay!)
+aws-posture <installed version>
+Prowler <installed version>
 ```
 
 ---

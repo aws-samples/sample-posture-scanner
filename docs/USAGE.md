@@ -1,6 +1,6 @@
 # aws-posture — Detailed Usage Guide
 
-`aws-posture` is a cross-platform command-line security scanner with two
+`aws-posture` is a cross-platform command-line security scanner with three
 independent workflows:
 
 1. **AWS posture** — runs Prowler against one AWS account or every active
@@ -9,6 +9,9 @@ independent workflows:
    or remote Git repository for insecure code, secrets, dependency
    vulnerabilities, IaC misconfigurations, licenses, and a software bill of
    materials (SBOM).
+3. **GenAI red team** — runs promptfoo adversarial probes against Amazon Bedrock
+   models, agents, and knowledge bases to surface prompt-injection,
+   jailbreak, and safety vulnerabilities.
 
 Each engine keeps its native evidence. Reports normalize and deduplicate
 results but never merge unrelated security domains into one misleading score.

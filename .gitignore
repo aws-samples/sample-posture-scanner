@@ -22,11 +22,6 @@ posture-report/
 promptfooconfig.yaml
 redteam.yaml
 
-# Distribution bundles and delivery notes (may contain presigned URLs)
-customer-handoff/
-*-bundle.zip
-DELIVERY-NOTE*.txt
-
 # Secrets and local configuration
 .env
 .env.*
